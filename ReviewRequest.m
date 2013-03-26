@@ -145,6 +145,14 @@ enum ReviewRequestButtonIndex {
   NSString *reviewedVersion = [defaults stringForKey:KeyReviewed];
   if ([reviewedVersion isEqualToString:version]) {
     return;
+  } else if ([reviewedVersion length] != 0) {
+    // After an app update, reset the timer and launch count.
+    [defaults setInteger:1 forKey:KeySessionCountSinceLastAsked];
+    const double nextTime =
+        CFAbsoluteTimeGetCurrent() + self.minWaitTimeSeconds;
+    [defaults setDouble:nextTime forKey:KeyNextTimeToAsk];
+    [defaults removeObjectForKey:KeyReviewed];
+    return;
   }
 
   const NSUInteger count =
