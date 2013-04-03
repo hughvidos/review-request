@@ -37,18 +37,6 @@
 
 @implementation ReviewRequest
 
-@synthesize minLaunchCount = minLaunchCount_;
-@synthesize minWaitTimeSeconds = minWaitTimeSeconds_;
-
-@synthesize iTunesReviewLink = iTunesReviewLink_;
-@synthesize reviewDialogAskLater = reviewDialogAskLater_;
-@synthesize reviewDialogDontAskAgain = reviewDialogDontAskAgain_;
-@synthesize reviewDialogMessage = reviewDialogMessage_;
-@synthesize reviewDialogOk = reviewDialogOk_;
-@synthesize reviewDialogTitle =reviewDialogTitle_;
-@synthesize reviewRequestDelegate = reviewRequestDelegate_;
-@synthesize showAskLaterButton = showAskLaterButton_;
-
 #pragma mark - Initialization and destruction
 
 - (id)init {
