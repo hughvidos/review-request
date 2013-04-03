@@ -28,12 +28,6 @@
 #define KeyNextTimeToAsk @"com.google.lib.review_request.next_time_to_ask"
 #define KeySessionCountSinceLastAsked @"com.google.lib.review_request.session_count_since_last_asked"
 
-enum ReviewRequestButtonIndex {
-  reviewRequestCancelButtonIndex = 0,
-  reviewRequestRateNowButtonIndex = 1,
-  reviewRequestRemindLaterButtonIndex = 2,
-};
-
 @interface ReviewRequest ()
 
 // Show the dialog that prompts the user to review the application.
@@ -52,6 +46,7 @@ enum ReviewRequestButtonIndex {
 @synthesize reviewDialogMessage = reviewDialogMessage_;
 @synthesize reviewDialogOk = reviewDialogOk_;
 @synthesize reviewDialogTitle =reviewDialogTitle_;
+@synthesize reviewRequestDelegate = reviewRequestDelegate_;
 @synthesize showAskLaterButton = showAskLaterButton_;
 
 #pragma mark - Initialization and destruction
@@ -125,6 +120,8 @@ enum ReviewRequestButtonIndex {
           "-alertView:didDismissWithButtonIndex");
       break;
   }
+
+  [self.reviewRequestDelegate userResponseReceived:buttonIndex];
 
   [defaults setInteger:0 forKey:KeySessionCountSinceLastAsked];
   // See -askForReview: for info about this release.

@@ -35,6 +35,19 @@
 //   @"itms-apps://ax.itunes.apple.com/WebObjects/MZStore.woa/wa/"
 //       "viewContentsUserReviews?type=Purple+Software&id=327466677";
 
+enum ReviewRequestButtonIndex {
+  reviewRequestCancelButtonIndex = 0,
+  reviewRequestRateNowButtonIndex = 1,
+  reviewRequestRemindLaterButtonIndex = 2,
+};
+
+// This protocol defines a function that informs the delegate of the user's
+// response to the review request prompt.
+@protocol ReviewRequestDelegate<NSObject>
+ @optional
+- (void)userResponseReceived:(NSInteger)buttonIndex;
+@end
+
 @interface ReviewRequest : NSObject <UIAlertViewDelegate> {
  @private
   NSUInteger minLaunchCount_;
@@ -46,6 +59,7 @@
   NSString *reviewDialogMessage_;
   NSString *reviewDialogOk_;
   NSString *reviewDialogTitle_;
+  id<ReviewRequestDelegate> reviewRequestDelegate_;
   BOOL showAskLaterButton_;
 }
 
@@ -77,6 +91,9 @@
 
 // Show the 'remind me later' button. Default is YES.
 @property(nonatomic, assign) BOOL showAskLaterButton;
+
+// The delegate to send user's response to.
+@property(nonatomic, assign) id<ReviewRequestDelegate> reviewRequestDelegate;
 
 // The initializer. iTunes URL must be specified as it is the only property for
 // which no default exists.
