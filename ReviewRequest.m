@@ -24,11 +24,14 @@
 #import <UIKit/UIKit.h>
 
 #define KeyReviewed @"com.google.lib.review_request.reviewed_for_version"
+#define KeySeen @"com.google.lib.review_request.seen_version"
 #define KeyDontAsk @"com.google.lib.review_request.dont_ask"
 #define KeyNextTimeToAsk @"com.google.lib.review_request.next_time_to_ask"
 #define KeySessionCountSinceLastAsked @"com.google.lib.review_request.session_count_since_last_asked"
 
 @interface ReviewRequest ()
+
+@property(nonatomic, strong) UIAlertView *alert;
 
 // Show the dialog that prompts the user to review the application.
 - (void)askForReview;
@@ -36,6 +39,20 @@
 @end
 
 @implementation ReviewRequest
+
+@synthesize alert = alert_;
+
+@synthesize minLaunchCount = minLaunchCount_;
+@synthesize minWaitTimeSeconds = minWaitTimeSeconds_;
+
+@synthesize iTunesReviewLink = iTunesReviewLink_;
+@synthesize reviewDialogAskLater = reviewDialogAskLater_;
+@synthesize reviewDialogDontAskAgain = reviewDialogDontAskAgain_;
+@synthesize reviewDialogMessage = reviewDialogMessage_;
+@synthesize reviewDialogOk = reviewDialogOk_;
+@synthesize reviewDialogTitle =reviewDialogTitle_;
+@synthesize reviewRequestDelegate = reviewRequestDelegate_;
+@synthesize showAskLaterButton = showAskLaterButton_;
 
 #pragma mark - Initialization and destruction
 
@@ -58,6 +75,12 @@
     self.reviewDialogOk = @"Yes, rate it!";
     self.reviewDialogTitle = @"Please rate";
     self.showAskLaterButton = YES;
+
+    NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+    [nc addObserver:self
+           selector:@selector(didEnterBackground:)
+               name:UIApplicationDidEnterBackgroundNotification
+             object:nil];
   }
   return self;
 }
@@ -69,6 +92,12 @@
   self.reviewDialogMessage = nil;
   self.reviewDialogOk = nil;
   self.reviewDialogTitle = nil;
+  self.alert = nil;
+
+  NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+  [nc removeObserver:self
+                name:UIApplicationDidEnterBackgroundNotification
+              object:nil];
   [super dealloc];
 }
 
@@ -112,6 +141,7 @@
   [self.reviewRequestDelegate userResponseReceived:buttonIndex];
 
   [defaults setInteger:0 forKey:KeySessionCountSinceLastAsked];
+  self.alert = nil;
   // See -askForReview: for info about this release.
   [self release];
 }
@@ -119,24 +149,32 @@
 #pragma mark - Public methods
 
 - (void)askForReviewIfNeeded {
+  if ([[UIApplication sharedApplication] applicationState] ==
+      UIApplicationStateBackground) {
+    // Skip review request if the app is running in the background.
+    return;
+  }
+
   NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+  NSString *version =
+      [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleVersion"];
+  NSString *seenVersion = [defaults stringForKey:KeySeen];
+
+  if (![seenVersion isEqualToString:version]) {
+    // After an app update, reset persistent data.
+    [defaults removeObjectForKey:KeyDontAsk];
+    [defaults removeObjectForKey:KeyNextTimeToAsk];
+    [defaults removeObjectForKey:KeyReviewed];
+    [defaults removeObjectForKey:KeySessionCountSinceLastAsked];
+    [defaults setValue:version forKey:KeySeen];
+  }
 
   if ([defaults boolForKey:KeyDontAsk]) {
     return;
   }
 
-  NSString *version =
-      [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleVersion"];
   NSString *reviewedVersion = [defaults stringForKey:KeyReviewed];
   if ([reviewedVersion isEqualToString:version]) {
-    return;
-  } else if ([reviewedVersion length] != 0) {
-    // After an app update, reset the timer and launch count.
-    [defaults setInteger:1 forKey:KeySessionCountSinceLastAsked];
-    const double nextTime =
-        CFAbsoluteTimeGetCurrent() + self.minWaitTimeSeconds;
-    [defaults setDouble:nextTime forKey:KeyNextTimeToAsk];
-    [defaults removeObjectForKey:KeyReviewed];
     return;
   }
 
@@ -170,27 +208,36 @@
 #pragma mark - Private methods
 
 - (void)askForReview {
-  UIAlertView *alert = nil;
+  NSAssert(self.alert == nil, @"ReviewRequest dialog already visible.");
   if (self.showAskLaterButton) {
-    alert = [[[UIAlertView alloc] initWithTitle:self.reviewDialogTitle
-                                        message:self.reviewDialogMessage
-                                       delegate:self
-                              cancelButtonTitle:self.reviewDialogDontAskAgain
-                              otherButtonTitles:self.reviewDialogOk,
-        self.reviewDialogAskLater, nil] autorelease];
+    self.alert =
+        [[[UIAlertView alloc] initWithTitle:self.reviewDialogTitle
+                                    message:self.reviewDialogMessage
+                                   delegate:self
+                          cancelButtonTitle:self.reviewDialogDontAskAgain
+                          otherButtonTitles:self.reviewDialogOk,
+            self.reviewDialogAskLater, nil] autorelease];
   } else {
-    alert = [[[UIAlertView alloc] initWithTitle:self.reviewDialogTitle
-                                        message:self.reviewDialogMessage
-                                       delegate:self
-                              cancelButtonTitle:self.reviewDialogDontAskAgain
-                              otherButtonTitles:self.reviewDialogOk,
-        nil] autorelease];
+    self.alert =
+        [[[UIAlertView alloc] initWithTitle:self.reviewDialogTitle
+                                    message:self.reviewDialogMessage
+                                   delegate:self
+                          cancelButtonTitle:self.reviewDialogDontAskAgain
+                          otherButtonTitles:self.reviewDialogOk,
+            nil] autorelease];
   }
 
   // Need to ensure that the current object will be retained until the delegate
   // is invoked.  There is a matching release in the delegate.
   [self retain];
-  [alert show];
+  [alert_ show];
+}
+
+#pragma mark - NSNotification observer
+
+- (void)didEnterBackground:(NSNotification *)notification {
+  [alert_ dismissWithClickedButtonIndex:reviewRequestRemindLaterButtonIndex
+                                   animated:NO];
 }
 
 @end
