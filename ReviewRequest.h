@@ -53,6 +53,7 @@ enum ReviewRequestButtonIndex {
   UIAlertView *alert_;
   NSUInteger minLaunchCount_;
   NSUInteger minWaitTimeSeconds_;
+  NSUInteger numberOfVersionsToSkip_;
 
   NSURL *iTunesReviewLink_;
   NSString *reviewDialogAskLater_;
@@ -71,6 +72,14 @@ enum ReviewRequestButtonIndex {
 // How much time after the user says to remind them later should pass before
 // asking again? This time will also be used when the application is installed.
 @property(nonatomic, assign) NSUInteger minWaitTimeSeconds;
+
+// IMPORTANT - this must be set before calling |askForReviewIfNeeded| if not
+// using default.
+// This parameter controlls the frequency of ReviewRequest. By default, it is
+// set to 0 and ReviewRequest is active on every app version. Set the parameter
+// to a positive integer to skip versions. For e.g., numVersionsToSkip = 2
+// makes ReviewRequest active on every third version.
+@property(nonatomic, assign) NSUInteger numberOfVersionsToSkip;
 
 // The link to the application review page on iTunes.
 @property(nonatomic, copy) NSURL *iTunesReviewLink;

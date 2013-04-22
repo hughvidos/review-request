@@ -25,6 +25,7 @@
 
 #define KeyReviewed @"com.google.lib.review_request.reviewed_for_version"
 #define KeySeen @"com.google.lib.review_request.seen_version"
+#define KeyNumVersions @"com.google.lib.review_request.num_of_versions"
 #define KeyDontAsk @"com.google.lib.review_request.dont_ask"
 #define KeyNextTimeToAsk @"com.google.lib.review_request.next_time_to_ask"
 #define KeySessionCountSinceLastAsked @"com.google.lib.review_request.session_count_since_last_asked"
@@ -44,6 +45,7 @@
 
 @synthesize minLaunchCount = minLaunchCount_;
 @synthesize minWaitTimeSeconds = minWaitTimeSeconds_;
+@synthesize numberOfVersionsToSkip = numberOfVersionsToSkip_;
 
 @synthesize iTunesReviewLink = iTunesReviewLink_;
 @synthesize reviewDialogAskLater = reviewDialogAskLater_;
@@ -69,6 +71,7 @@
     // set default values
     self.minLaunchCount = 12;
     self.minWaitTimeSeconds = 60 * 60 * 23; // 23 hours
+    self.numberOfVersionsToSkip = 0;
     self.reviewDialogAskLater = @"Remind me later";
     self.reviewDialogDontAskAgain = @"Don't ask again";
     self.reviewDialogMessage = @"so we can keep the updates coming.";
@@ -159,6 +162,7 @@
   NSString *version =
       [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleVersion"];
   NSString *seenVersion = [defaults stringForKey:KeySeen];
+  NSUInteger numVersions = [defaults integerForKey:KeyNumVersions];
 
   if (![seenVersion isEqualToString:version]) {
     // After an app update, reset persistent data.
@@ -167,6 +171,17 @@
     [defaults removeObjectForKey:KeyReviewed];
     [defaults removeObjectForKey:KeySessionCountSinceLastAsked];
     [defaults setValue:version forKey:KeySeen];
+    if (numVersions > self.numberOfVersionsToSkip) {
+      [defaults setInteger:1 forKey:KeyNumVersions];
+    } else {
+      [defaults setInteger:numVersions+1 forKey:KeyNumVersions];
+    }
+  }
+
+  numVersions = [defaults integerForKey:KeyNumVersions];
+  if (self.numberOfVersionsToSkip > 0 &&
+      numVersions <= self.numberOfVersionsToSkip) {
+    return;
   }
 
   if ([defaults boolForKey:KeyDontAsk]) {
