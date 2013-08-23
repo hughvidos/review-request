@@ -41,21 +41,6 @@
 
 @implementation ReviewRequest
 
-@synthesize alert = alert_;
-
-@synthesize minLaunchCount = minLaunchCount_;
-@synthesize minWaitTimeSeconds = minWaitTimeSeconds_;
-@synthesize numberOfVersionsToSkip = numberOfVersionsToSkip_;
-
-@synthesize iTunesReviewLink = iTunesReviewLink_;
-@synthesize reviewDialogAskLater = reviewDialogAskLater_;
-@synthesize reviewDialogDontAskAgain = reviewDialogDontAskAgain_;
-@synthesize reviewDialogMessage = reviewDialogMessage_;
-@synthesize reviewDialogOk = reviewDialogOk_;
-@synthesize reviewDialogTitle =reviewDialogTitle_;
-@synthesize reviewRequestDelegate = reviewRequestDelegate_;
-@synthesize showAskLaterButton = showAskLaterButton_;
-
 #pragma mark - Initialization and destruction
 
 - (id)init {
@@ -245,13 +230,13 @@
   // Need to ensure that the current object will be retained until the delegate
   // is invoked.  There is a matching release in the delegate.
   [self retain];
-  [alert_ show];
+  [self.alert show];
 }
 
 #pragma mark - NSNotification observer
 
 - (void)didEnterBackground:(NSNotification *)notification {
-  [alert_ dismissWithClickedButtonIndex:reviewRequestRemindLaterButtonIndex
+  [self.alert dismissWithClickedButtonIndex:reviewRequestRemindLaterButtonIndex
                                    animated:NO];
 }
 

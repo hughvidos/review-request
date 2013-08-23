@@ -48,22 +48,7 @@ enum ReviewRequestButtonIndex {
 - (void)userResponseReceived:(NSInteger)buttonIndex;
 @end
 
-@interface ReviewRequest : NSObject <UIAlertViewDelegate> {
- @private
-  UIAlertView *alert_;
-  NSUInteger minLaunchCount_;
-  NSUInteger minWaitTimeSeconds_;
-  NSUInteger numberOfVersionsToSkip_;
-
-  NSURL *iTunesReviewLink_;
-  NSString *reviewDialogAskLater_;
-  NSString *reviewDialogDontAskAgain_;
-  NSString *reviewDialogMessage_;
-  NSString *reviewDialogOk_;
-  NSString *reviewDialogTitle_;
-  id<ReviewRequestDelegate> reviewRequestDelegate_;
-  BOOL showAskLaterButton_;
-}
+@interface ReviewRequest : NSObject <UIAlertViewDelegate>
 
 // How many times must the application be launched before prompting the user?
 // Set to 0 to not require a minimum number of launches.
